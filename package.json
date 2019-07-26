@@ -1,0 +1,24 @@
+{
+  "name": "book-picker-bot",
+  "version": "1.0.0",
+  "description": "A bot that picks books",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dankuck/book-picker-bot.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dankuck/book-picker-bot/issues"
+  },
+  "homepage": "https://github.com/dankuck/book-picker-bot#readme",
+  "dependencies": {
+    "axios": "^0.19.0",
+    "collect.js": "^4.15.0",
+    "url": "^0.11.0"
+  }
+}
