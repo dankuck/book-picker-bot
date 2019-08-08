@@ -18,7 +18,11 @@
   "homepage": "https://github.com/dankuck/book-picker-bot#readme",
   "dependencies": {
     "axios": "^0.19.0",
+    "btoa": "^1.2.1",
     "collect.js": "^4.15.0",
-    "url": "^0.11.0"
+    "create-hmac": "^1.1.7",
+    "dotenv": "^8.0.0",
+    "url": "^0.11.0",
+    "xml2js": "^0.4.19"
   }
 }

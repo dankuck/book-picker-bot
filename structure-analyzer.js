@@ -46,10 +46,10 @@ function getExample(value, skip_arrays = false) {
     return null;
 }
 
-function analyze(analysis, entry) {
+function analyze(analysis, entry, path = '') {
     if (entry instanceof Array) {
         return entry.reduce(
-            analyze,
+            (analysis, entry) => analyze(analysis, entry, `${path}[]`),
             analysis
         );
     }
@@ -59,10 +59,11 @@ function analyze(analysis, entry) {
     for (let field in entry) {
         if (!analysis[field]) {
             analysis[field] = {
-                has: {},
+                path: `${path}.${field}`,
                 types: {},
                 max_length: null,
                 example: null,
+                has: {},
             };
         }
     }
@@ -82,7 +83,7 @@ function analyze(analysis, entry) {
                 analysis[field].example = example;
             }
         }
-        analyze(analysis[field].has, entry[field]);
+        analyze(analysis[field].has, entry[field], analysis[field].path);
     }
     return analysis;
 };
