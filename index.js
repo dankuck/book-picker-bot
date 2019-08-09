@@ -16,7 +16,6 @@ const calls = [];
 
 for (let i = 0; i < count; i++) {
     const word = words.random();
-    console.log(`Searching Amazon for ${word}`);
     calls.push(
         amazon.search(word)
             .then(
@@ -33,8 +32,11 @@ for (let i = 0; i < count; i++) {
 
 Promise.all(calls)
     .then(
-        (responses) => {
-            console.log(JSON.stringify(analyzeStructure(responses)));
+        (searches) => {
+            console.log(JSON.stringify({
+                searches,
+                analysis: analyzeStructure(searches)
+            }));
         },
         console.error
     );

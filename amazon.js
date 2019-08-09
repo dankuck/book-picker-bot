@@ -5,7 +5,7 @@ const url = require('url');
 const xml2js = require('xml2js').parseString;
 const SlowQueue = require('./slow-queue');
 
-const queue = new SlowQueue(1000);
+const queue = new SlowQueue(process.env.AMAZON_WAIT_TIME || 1100);
 
 module.exports = {
     search(word) {
@@ -46,8 +46,8 @@ module.exports = {
             pathname: path,
             query: params,
         });
-        return queue.getPromise()
-            .then(() => axios.get(urlString))
+        return queue
+            .getPromise(() => axios.get(urlString))
             .then(response => {
                 return new Promise(resolve => {
                     xml2js(response.data, (err, result) => resolve(result))
