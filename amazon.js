@@ -4,7 +4,6 @@ const btoa = require('btoa');
 const url = require('url');
 const xml2js = require('xml2js').parseString;
 const SlowQueue = require('./slow-queue');
-const collect = require('collect.js');
 
 const queue = new SlowQueue(process.env.AMAZON_WAIT_TIME || 1100);
 

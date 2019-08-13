@@ -5,5 +5,14 @@ const collect = require('collect.js');
 
 const amazonConvertResponse = require('./amazon-convert-response');
 
-nine.searches.forEach(({results}, i) => console.log(i, amazonConvertResponse(results)));
+const amazonItems = collect(nine.searches)
+    .flatMap(({results}, i) => {
+        try {
+            return amazonConvertResponse(results);
+        } catch {
+            return [];
+        }
+    })
+    .all();
 
+console.log(amazonItems.length);
