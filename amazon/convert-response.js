@@ -13,7 +13,7 @@ const toInches = function (measurement) {
     }
 }
 
-module.exports = function amazonConvertResponse(response) {
+module.exports = function amazonConvertResponse(response, search) {
     const error = first(response, 'ItemSearchResponse.Items.0.Request.0.Errors.0.Error.0.Message');
     if (error) {
         throw new Error(error);
@@ -32,7 +32,7 @@ module.exports = function amazonConvertResponse(response) {
                     };
                 })
                 [0];
-            const dimensions = first(item, 'ItemAttributes.0.ItemDimensions.0')
+            const dimensions = first(item, 'ItemAttributes.0.ItemDimensions.0.Height.0')
                 ? {
                     height: toInches(first(item, 'ItemAttributes.0.ItemDimensions.0.Height.0')),
                     length: toInches(first(item, 'ItemAttributes.0.ItemDimensions.0.Length.0')),
@@ -40,8 +40,19 @@ module.exports = function amazonConvertResponse(response) {
                 }
                 : null;
             const languages = all(item, 'ItemAttributes.0.Languages.0.Language.0.Name.0');
+            const offer_counts = first(item, 'OfferSummary.0.TotalNew.0')
+                ? {
+                    'new': Number(first(item, 'OfferSummary.0.TotalNew.0')),
+                    'used': Number(first(item, 'OfferSummary.0.TotalUsed.0')),
+                    'collectible': Number(first(item, 'OfferSummary.0.TotalCollectible.0')),
+                    'refurbished': Number(first(item, 'OfferSummary.0.TotalRefurbished.0')),
+                }
+                : null;
+            const published_at = first(item, 'ItemAttributes.0.PublicationDate.0')
+                ? new Date(first(item, 'ItemAttributes.0.PublicationDate.0'))
+                : null;
             return {
-                ASIN: first(item, 'ASIN.0'),
+                asin: first(item, 'ASIN.0'),
                 url: first(item, 'DetailPageURL.0'),
                 image,
                 by: all(item, 'ItemAttributes.0.Author.0')
@@ -52,7 +63,7 @@ module.exports = function amazonConvertResponse(response) {
                 dimensions,
                 languages,
                 pages: Number(first(item, 'ItemAttributes.0.NumberOfPages.0')),
-                published_at: new Date(first(item, 'ItemAttributes.0.PublicationDate.0')),
+                published_at,
                 format: first(item, 'ItemAttributes.0.Format.0'),
                 is_memorobilia: Boolean(first(item, 'ItemAttributes.0.IsMemorabilia.0')),
                 genre: first(item, 'ItemAttributes.0.Genre.0'),
@@ -61,12 +72,8 @@ module.exports = function amazonConvertResponse(response) {
                     'used': first(item, 'OfferSummary.0.LowestUsedPrice.0.FormattedPrice.0'),
                     'collectible': first(item, 'OfferSummary.0.LowestCollectiblePrice.0.FormattedPrice.0'),
                 },
-                offer_counts: {
-                    'new': Number(first(item, 'OfferSummary.0.TotalNew.0')),
-                    'used': Number(first(item, 'OfferSummary.0.TotalUsed.0')),
-                    'collectible': Number(first(item, 'OfferSummary.0.TotalCollectible.0')),
-                    'refurbished': Number(first(item, 'OfferSummary.0.TotalRefurbished.0')),
-                },
+                offer_counts,
+                search,
             };
         })
         .all();

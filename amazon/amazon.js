@@ -3,7 +3,7 @@ const createHmac = require('create-hmac');
 const btoa = require('btoa');
 const url = require('url');
 const xml2js = require('xml2js').parseString;
-const SlowQueue = require('./slow-queue');
+const SlowQueue = require('../slow-queue');
 
 const queue = new SlowQueue(process.env.AMAZON_WAIT_TIME || 1100);
 
@@ -49,12 +49,9 @@ module.exports = {
         return queue
             .getPromise(() => axios.get(urlString))
             .then(response => {
-                return new Promise(resolve => {
-                    xml2js(response.data, (err, result) => resolve(result))
+                return new Promise((resolve, reject) => {
+                    xml2js(response.data, (err, result) => err ? reject(err) : resolve(result))
                 });
-            })
-            .then(amazon_response => {
-                collect(amazon_response).get('ItemSearchResponse.Items[0].Request[0].Errors[0].Error[0].Message');
             });
     },
 };
