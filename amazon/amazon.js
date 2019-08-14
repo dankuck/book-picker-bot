@@ -3,7 +3,7 @@ const createHmac = require('create-hmac');
 const btoa = require('btoa');
 const url = require('url');
 const xml2js = require('xml2js').parseString;
-const SlowQueue = require('../slow-queue');
+const SlowQueue = require('../utils/slow-queue');
 
 const queue = new SlowQueue(process.env.AMAZON_WAIT_TIME || 1100);
 
@@ -25,7 +25,7 @@ module.exports = {
             'Condition': 'Used',
             'Keywords': word,
             'Operation': 'ItemSearch',
-            'ResponseGroup': 'Images,ItemAttributes,Offers',
+            'ResponseGroup': 'Images,ItemAttributes,Offers,BrowseNodes',
             'SearchIndex': 'Books',
             'Service': 'AWSECommerceService',
             'Timestamp': new Date().toISOString(),

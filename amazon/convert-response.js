@@ -11,7 +11,29 @@ const toInches = function (measurement) {
     } else {
         throw new Error('Unknown unit `' + unit + '` in ' + JSON.stringify(measurement));
     }
-}
+};
+
+const buildCategoryList = function (item) {
+    let queue = all(item, 'BrowseNodes.0.BrowseNode.0');
+    const categories = [];
+    while (queue.length > 0) {
+        const node = queue.pop();
+        categories.push(first(node, 'Name.0'));
+        queue = queue.concat(all(node, 'Ancestors.0.BrowseNode.0'));
+    }
+    return categories;
+};
+
+const isFiction = function (categories) {
+    const fiction = /fiction|fantasy/i;
+    const nonfiction = /non\-?fiction/i;
+    return categories
+        .reduce(
+            (alreadyTrue, category) => alreadyTrue
+                || (fiction.test(category) && ! nonfiction.test(category)),
+            false
+        );
+};
 
 module.exports = function amazonConvertResponse(response, search) {
     const error = first(response, 'ItemSearchResponse.Items.0.Request.0.Errors.0.Error.0.Message');
@@ -20,6 +42,7 @@ module.exports = function amazonConvertResponse(response, search) {
     }
     return collect([response])
         .pluck('ItemSearchResponse.Items.0.Item')
+        .map(x => x || [])
         .flatten(1)
         .map((item) => {
             const image = all(item, 'MediumImage.0')
@@ -51,6 +74,7 @@ module.exports = function amazonConvertResponse(response, search) {
             const published_at = first(item, 'ItemAttributes.0.PublicationDate.0')
                 ? new Date(first(item, 'ItemAttributes.0.PublicationDate.0'))
                 : null;
+            const categories = buildCategoryList(item);
             return {
                 asin: first(item, 'ASIN.0'),
                 url: first(item, 'DetailPageURL.0'),
@@ -62,17 +86,19 @@ module.exports = function amazonConvertResponse(response, search) {
                 is_adult_only: Boolean(first(item, 'ItemAttributes.0.IsAdultProduct.0')),
                 dimensions,
                 languages,
+                has_english: languages.includes('English'),
                 pages: Number(first(item, 'ItemAttributes.0.NumberOfPages.0')),
                 published_at,
                 format: first(item, 'ItemAttributes.0.Format.0'),
                 is_memorobilia: Boolean(first(item, 'ItemAttributes.0.IsMemorabilia.0')),
-                genre: first(item, 'ItemAttributes.0.Genre.0'),
                 prices: {
                     'new': first(item, 'OfferSummary.0.LowestNewPrice.0.FormattedPrice.0'),
                     'used': first(item, 'OfferSummary.0.LowestUsedPrice.0.FormattedPrice.0'),
                     'collectible': first(item, 'OfferSummary.0.LowestCollectiblePrice.0.FormattedPrice.0'),
                 },
                 offer_counts,
+                categories,
+                is_fiction: isFiction(categories),
                 search,
             };
         })
