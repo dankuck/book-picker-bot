@@ -4,10 +4,10 @@ const collect = require('collect.js');
 
 /**
  |-----------------------------
- | ItemsSelector
+ | ItemSelector
  |-----------------------------
  |
- | ItemsSelector is used to build an array that matches given rules from a pool
+ | ItemSelector is used to build an array that matches given rules from a pool
  | of potential elements.
  |
  | The rules are given as an object to the constructor.
@@ -23,9 +23,9 @@ const collect = require('collect.js');
  |
  | Example:
  |
- |     // This example creates an ItemsSelector that will build arrays that
+ |     // This example creates an ItemSelector that will build arrays that
  |     // have no more than two elements greater than 9.
- |     new ItemsSelector({
+ |     new ItemSelector({
  |         onlyTwoGreaterThan9: {
  |             value: (element) => element > 9,
  |             bounds: [
@@ -39,22 +39,22 @@ const collect = require('collect.js');
  | There are several functions that can build boundary functions more simply:
  |
  |-----------------------------
- | ItemsSelector.maxCount
+ | ItemSelector.maxCount
  |-----------------------------
  | Ensure a certain number or less of elements match the value function.
  |
  | Example:
  |
  |     // Only 2 or less of the result elements should be greater than 9
- |     new ItemsSelector({
+ |     new ItemSelector({
  |         onlyTwoGreaterThan9: {
  |             value: (element) => element > 9,
- |             bounds: [ItemsSelector.maxCount(2)],
+ |             bounds: [ItemSelector.maxCount(2)],
  |         },
  |     });
  |
  |-----------------------------
- | ItemsSelector.minCount
+ | ItemSelector.minCount
  |-----------------------------
  | Ensure a certain number or more of elements match the value function.
  | If there are fewer elements than the given number, then all elements
@@ -63,30 +63,30 @@ const collect = require('collect.js');
  | Example:
  |
  |     // Only 2 or less of the result elements should be greater than 9
- |     new ItemsSelector({
+ |     new ItemSelector({
  |         onlyTwoGreaterThan9: {
  |             value: (element) => element > 9,
- |             bounds: [ItemsSelector.maxCount(2)],
+ |             bounds: [ItemSelector.maxCount(2)],
  |         },
  |     });
  |
  |-----------------------------
- | ItemsSelector.maxPercentage
+ | ItemSelector.maxPercentage
  |-----------------------------
  | Ensure a certain percentage or less of elements match the value function.
  |
  | Example:
  |
  |     // Only 10% or less of the result elements should be greater than 9
- |     new ItemsSelector({
+ |     new ItemSelector({
  |         onlyTenPercentGreaterThan9: {
  |             value: (element) => element > 9,
- |             bounds: [ItemsSelector.maxPercentage(.1)],
+ |             bounds: [ItemSelector.maxPercentage(.1)],
  |         },
  |     });
  |
  |-----------------------------
- | ItemsSelector.minPercentage
+ | ItemSelector.minPercentage
  |-----------------------------
  | Ensure a certain percentage or more of elements match the value function.
  | If percentage represents less than 1 element, then 1 element needs to
@@ -95,15 +95,15 @@ const collect = require('collect.js');
  | Example:
  |
  |     // Only 10% or less of the result elements should be greater than 9
- |     new ItemsSelector({
+ |     new ItemSelector({
  |         onlyTenPercentGreaterThan9: {
  |             value: (element) => element > 9,
- |             bounds: [ItemsSelector.maxPercentage(.1)],
+ |             bounds: [ItemSelector.maxPercentage(.1)],
  |         },
  |     });
  |
  |-----------------------------
- | ItemsSelector.maxDuplication
+ | ItemSelector.maxDuplication
  |-----------------------------
  | Ensure no more than a certain number of elements return the same value
  | from the value function.
@@ -111,10 +111,10 @@ const collect = require('collect.js');
  | Example:
  |
  |     // Only allow 2 items that have any particular category
- |     new ItemsSelector({
+ |     new ItemSelector({
  |         onlyTwoFromEachCategory: {
  |             value: (element) => element.category,
- |             bounds: [ItemsSelector.maxDuplication(2)],
+ |             bounds: [ItemSelector.maxDuplication(2)],
  |         },
  |     });
  |
@@ -122,14 +122,14 @@ const collect = require('collect.js');
  | Tip:
  |
  | Avoid defining bounds which cannot be met by a list with exactly one
- | element. ItemsSelector works naively by adding one item at a time, so a
+ | element. ItemSelector works naively by adding one item at a time, so a
  | rule which requires a minimum of two elements will fail every time the
  | process starts.
  |
  | For example, `minCount` has to take special care if the total is less than
  | the minimum. In that case it only requires that all elements match.
  */
-class ItemsSelector {
+class ItemSelector {
 
     constructor(rules) {
         this.rules = rules;
@@ -214,7 +214,7 @@ class ItemsSelector {
  * @param  {float} percentage value from 0 to 1
  * @return {Function}
  */
-ItemsSelector.maxPercentage = function maxPercentage(percentage) {
+ItemSelector.maxPercentage = function maxPercentage(percentage) {
     return (values) =>
         values.filter(Boolean).length / values.length
         <= percentage;
@@ -227,10 +227,10 @@ ItemsSelector.maxPercentage = function maxPercentage(percentage) {
  * @param  {float} percentage value from 0 to 1
  * @return {Function}
  */
-ItemsSelector.minPercentage = function minPercentage(percentage) {
+ItemSelector.minPercentage = function minPercentage(percentage) {
     return (values) => {
         const number = percentage * values.length;
-        const min = ItemsSelector.minCount(number);
+        const min = ItemSelector.minCount(number);
         return min(values);
     };
 };
@@ -241,7 +241,7 @@ ItemsSelector.minPercentage = function minPercentage(percentage) {
  * @param  {number} number
  * @return {Function}
  */
-ItemsSelector.maxCount = function maxCount(number) {
+ItemSelector.maxCount = function maxCount(number) {
     return (values) => values.filter(Boolean).length <= number;
 };
 
@@ -252,7 +252,7 @@ ItemsSelector.maxCount = function maxCount(number) {
  * @param  {number} number
  * @return {Function}
  */
-ItemsSelector.minCount = function minCount(number) {
+ItemSelector.minCount = function minCount(number) {
     return (values) => {
         if (values.length < number) {
             return values.filter(Boolean).length === values.length;
@@ -268,10 +268,10 @@ ItemsSelector.minCount = function minCount(number) {
  * @param  {number} number
  * @return {Function}
  */
-ItemsSelector.maxDuplication = function maxDuplication(number) {
+ItemSelector.maxDuplication = function maxDuplication(number) {
     return (values) => ! collect(values)
         .groupBy(value => value)
         .first((values) => values.count() > number);
 };
 
-module.exports = ItemsSelector;
+module.exports = ItemSelector;

@@ -1,4 +1,4 @@
-const ItemsSelector = require('../items-selector/items-selector.js');
+const ItemSelector = require('../item-selector/item-selector.js');
 const assert = require('assert');
 const {deepStrictEqual} = require('assert');
 
@@ -8,12 +8,12 @@ const {
     maxPercentage,
     minCount,
     minPercentage,
-} = ItemsSelector;
+} = ItemSelector;
 
-describe('items-selector.js', function () {
+describe('item-selector.js', function () {
 
     it('should exist', function () {
-        assert(new ItemsSelector({}));
+        assert(new ItemSelector({}));
     });
 
     it('should have a maxPercentage boundary builder', function () {
@@ -75,7 +75,7 @@ describe('items-selector.js', function () {
     });
 
     it('should build a profile of an item', function () {
-        const selector = new ItemsSelector({
+        const selector = new ItemSelector({
             greaterThan9: {
                 value: item => item.x > 9,
                 bounds: [maxPercentage(.1)],
@@ -94,7 +94,7 @@ describe('items-selector.js', function () {
     });
 
     it('should build values of profiles', function () {
-        const selector = new ItemsSelector({
+        const selector = new ItemSelector({
             x: {
                 // value: doesn't matter
                 bounds: [maxPercentage(.1)],
@@ -118,7 +118,7 @@ describe('items-selector.js', function () {
     });
 
     it('should check if counts are within bounds', function () {
-        const selector = new ItemsSelector({
+        const selector = new ItemSelector({
             x: {
                 // value: doesn't matter
                 bounds: [maxPercentage(.1)],
@@ -143,7 +143,7 @@ describe('items-selector.js', function () {
     });
 
     it('should select items matching the bounds given', function () {
-        const selector = new ItemsSelector({
+        const selector = new ItemSelector({
             greaterThan9: {
                 value: item => item.x > 9,
                 bounds: [maxPercentage(.1)],
@@ -164,7 +164,7 @@ describe('items-selector.js', function () {
     });
 
     it('should obey two boundaries', function () {
-        const selector = new ItemsSelector({
+        const selector = new ItemSelector({
             greaterThan9: {
                 value: item => item.x > 9,
                 bounds: [maxPercentage(.1), maxCount(1)],
@@ -195,7 +195,7 @@ describe('items-selector.js', function () {
     });
 
     it('should return [] if boundaries cannot be met', function () {
-        const selector = new ItemsSelector({
+        const selector = new ItemSelector({
             greaterThan9: {
                 value: item => item.x > 9,
                 bounds: [maxCount(0)],
@@ -212,7 +212,7 @@ describe('items-selector.js', function () {
     });
 
     it('should return as many values as possible by default', function () {
-        const selector = new ItemsSelector({
+        const selector = new ItemSelector({
             greaterThan9: {
                 value: item => item.x > 9,
                 bounds: [maxCount(0)],
@@ -233,7 +233,7 @@ describe('items-selector.js', function () {
     });
 
     it('should require a minimum count to match', function () {
-        const selector = new ItemsSelector({
+        const selector = new ItemSelector({
             greaterThan9: {
                 value: item => item.x > 9,
                 bounds: [minCount(3)],
@@ -254,7 +254,7 @@ describe('items-selector.js', function () {
     });
 
     it('should require a minimum percentage to match', function () {
-        const selector = new ItemsSelector({
+        const selector = new ItemSelector({
             greaterThan9: {
                 value: item => item.x > 9,
                 bounds: [minPercentage(.1)],
@@ -274,7 +274,7 @@ describe('items-selector.js', function () {
     });
 
     it('should require a minimum of 10% to match even when 10% is less than 1 element', function () {
-        const selector = new ItemsSelector({
+        const selector = new ItemSelector({
             greaterThan9: {
                 value: item => item.x > 9,
                 bounds: [minPercentage(.1)],
@@ -294,7 +294,7 @@ describe('items-selector.js', function () {
     });
 
     it('should require a minimum of 10% to match when 10% is large', function () {
-        const selector = new ItemsSelector({
+        const selector = new ItemSelector({
             greaterThan9: {
                 value: item => item.x > 9,
                 bounds: [minPercentage(.1)],
@@ -328,7 +328,7 @@ describe('items-selector.js', function () {
     });
 
     it('should require an exact number using min and max counts', function () {
-        const selector = new ItemsSelector({
+        const selector = new ItemSelector({
             greaterThan9: {
                 value: item => item.x > 9,
                 bounds: [minCount(3), maxCount(3)],
@@ -349,7 +349,7 @@ describe('items-selector.js', function () {
     });
 
     it('should result in the smaller number if min and max count conflict', function () {
-        const selector = new ItemsSelector({
+        const selector = new ItemSelector({
             greaterThan9: {
                 value: item => item.x > 9,
                 bounds: [minCount(4), maxCount(2)],
