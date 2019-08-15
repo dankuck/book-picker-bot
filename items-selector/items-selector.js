@@ -2,7 +2,134 @@
 
 const collect = require('collect.js');
 
-module.exports = class ItemsSelector {
+/**
+ |-----------------------------
+ | ItemsSelector
+ |-----------------------------
+ |
+ | ItemsSelector is used to build an array that matches given rules from a pool
+ | of potential elements.
+ |
+ | The rules are given as an object to the constructor.
+ |
+ | Each rule has a `value` method and an array of `bounds`.
+ |
+ | The `value` method accepts an element from the pool of potential elements
+ | and returns a value that is relevant to this rule.
+ |
+ | The `bounds` array holds 1 or more functions. Each `bounds` function
+ | accepts an array of values for the given rule and returns true if and only
+ | if those values meet desired criteria.
+ |
+ | Example:
+ |
+ |     // This example creates an ItemsSelector that will build arrays that
+ |     // have no more than two elements greater than 9.
+ |     new ItemsSelector({
+ |         onlyTwoGreaterThan9: {
+ |             value: (element) => element > 9,
+ |             bounds: [
+ |                 (values) => values.filter(Boolean).length <= 2,
+ |             ],
+ |         },
+ |     });
+ |
+ | The same thing could be done more easily with `maxCount` below.
+ |
+ | There are several functions that can build boundary functions more simply:
+ |
+ |-----------------------------
+ | ItemsSelector.maxCount
+ |-----------------------------
+ | Ensure a certain number or less of elements match the value function.
+ |
+ | Example:
+ |
+ |     // Only 2 or less of the result elements should be greater than 9
+ |     new ItemsSelector({
+ |         onlyTwoGreaterThan9: {
+ |             value: (element) => element > 9,
+ |             bounds: [ItemsSelector.maxCount(2)],
+ |         },
+ |     });
+ |
+ |-----------------------------
+ | ItemsSelector.minCount
+ |-----------------------------
+ | Ensure a certain number or more of elements match the value function.
+ | If there are fewer elements than the given number, then all elements
+ | must match the value function.
+ |
+ | Example:
+ |
+ |     // Only 2 or less of the result elements should be greater than 9
+ |     new ItemsSelector({
+ |         onlyTwoGreaterThan9: {
+ |             value: (element) => element > 9,
+ |             bounds: [ItemsSelector.maxCount(2)],
+ |         },
+ |     });
+ |
+ |-----------------------------
+ | ItemsSelector.maxPercentage
+ |-----------------------------
+ | Ensure a certain percentage or less of elements match the value function.
+ |
+ | Example:
+ |
+ |     // Only 10% or less of the result elements should be greater than 9
+ |     new ItemsSelector({
+ |         onlyTenPercentGreaterThan9: {
+ |             value: (element) => element > 9,
+ |             bounds: [ItemsSelector.maxPercentage(.1)],
+ |         },
+ |     });
+ |
+ |-----------------------------
+ | ItemsSelector.minPercentage
+ |-----------------------------
+ | Ensure a certain percentage or more of elements match the value function.
+ | If percentage represents less than 1 element, then 1 element needs to
+ | match.
+ |
+ | Example:
+ |
+ |     // Only 10% or less of the result elements should be greater than 9
+ |     new ItemsSelector({
+ |         onlyTenPercentGreaterThan9: {
+ |             value: (element) => element > 9,
+ |             bounds: [ItemsSelector.maxPercentage(.1)],
+ |         },
+ |     });
+ |
+ |-----------------------------
+ | ItemsSelector.maxDuplication
+ |-----------------------------
+ | Ensure no more than a certain number of elements return the same value
+ | from the value function.
+ |
+ | Example:
+ |
+ |     // Only allow 2 items that have any particular category
+ |     new ItemsSelector({
+ |         onlyTwoFromEachCategory: {
+ |             value: (element) => element.category,
+ |             bounds: [ItemsSelector.maxDuplication(2)],
+ |         },
+ |     });
+ |
+ |-----------------------------
+ | Tip:
+ |
+ | Avoid defining bounds which cannot be met by a list with exactly one
+ | element. ItemsSelector works naively by adding one item at a time, so a
+ | rule which requires a minimum of two elements will fail every time the
+ | process starts.
+ |
+ | For example, `minCount` has to take special care if the total is less than
+ | the minimum. In that case it only requires that all elements match.
+ */
+class ItemsSelector {
 
     constructor(rules) {
         this.rules = rules;
@@ -10,12 +137,13 @@ module.exports = class ItemsSelector {
 
     /**
      * Select items from `pool` such that the results match the rules given and
-     * has no more than `count` items.
+     * has no more than `count` items. Check the length of the array returned
+     * if necessary.
      * @param  {array} pool
      * @param  {number} count
      * @return {array}
      */
-    select(pool, count) {
+    select(pool, count = Infinity) {
         pool = collect(pool).shuffle().all();
         const selected = [];
         let startLength;
@@ -79,3 +207,71 @@ module.exports = class ItemsSelector {
             }, true);
     }
 };
+
+/**
+ * Returns a function that evaluates to true IFF the true values of the given
+ * array are less than or equal to `percentage` of the full length of the array
+ * @param  {float} percentage value from 0 to 1
+ * @return {Function}
+ */
+ItemsSelector.maxPercentage = function maxPercentage(percentage) {
+    return (values) =>
+        values.filter(Boolean).length / values.length
+        <= percentage;
+};
+
+/**
+ * Returns a function that evaluates to true IFF the truthy values of the given
+ * array are greater than or equal to `percentage` of the full length of the
+ * array.
+ * @param  {float} percentage value from 0 to 1
+ * @return {Function}
+ */
+ItemsSelector.minPercentage = function minPercentage(percentage) {
+    return (values) => {
+        const number = percentage * values.length;
+        const min = ItemsSelector.minCount(number);
+        return min(values);
+    };
+};
+
+/**
+ * Returns a function that evaluates to true IFF `number` or fewer values of
+ * the given array are truthy
+ * @param  {number} number
+ * @return {Function}
+ */
+ItemsSelector.maxCount = function maxCount(number) {
+    return (values) => values.filter(Boolean).length <= number;
+};
+
+/**
+ * Returns a function that evaluates to true IFF `number` or more values of
+ * the given array are truthy, or if there are not enough elements, then only
+ * if all values are truthy
+ * @param  {number} number
+ * @return {Function}
+ */
+ItemsSelector.minCount = function minCount(number) {
+    return (values) => {
+        if (values.length < number) {
+            return values.filter(Boolean).length === values.length;
+        } else {
+            return values.filter(Boolean).length >= number;
+        }
+    }
+};
+
+/**
+ * Returns a function that evaluates to true IFF each element of the given
+ * array is present `number` or fewer times.
+ * @param  {number} number
+ * @return {Function}
+ */
+ItemsSelector.maxDuplication = function maxDuplication(number) {
+    return (values) => ! collect(values)
+        .groupBy(value => value)
+        .first((values) => values.count() > number);
+};
+
+module.exports = ItemsSelector;
