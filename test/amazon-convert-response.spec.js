@@ -85,4 +85,12 @@ describe('amazon/convert-response.js', function () {
         const items = amazonConvertResponse({}, '');
         assert(items.length === 0);
     });
+
+    it('gets is_adult_only correct', function () {
+        const {results, word} = getTestData('amazon-response-agonist.json');
+        const items = amazonConvertResponse(results, word);
+        for (let item of items) {
+            assert(item.is_adult_only === false, 'This one claims to be adult only: ' + JSON.stringify(item));
+        }
+    });
 });
