@@ -12,10 +12,6 @@ const maxCount = function maxCount(number) {
     return (values) => values.filter(Boolean).length <= number;
 };
 
-const minCount = function minCount(number) {
-    return (values) => values.filter(Boolean).length >= number;
-};
-
 describe('items-selector.js', function () {
 
     it('should exist', function () {
@@ -157,27 +153,5 @@ describe('items-selector.js', function () {
         ];
         const selections = selector.select(pool, 10);
         deepStrictEqual([], selections);
-    });
-
-    it('should obey boundaries that take more than one step to meet', function () {
-        const selector = new ItemsSelector({
-            greaterThan9: {
-                value: item => item.x > 9,
-                bounds: [minCount(2)],
-            },
-        });
-        const pool = [
-            // greater than 9
-            {x: 10}, {x: 11},
-            // 18 less than or equal to 9
-            {x: 1}, {x: 2}, {x: 3}, {x: 4}, {x: 5},
-            {x: 6}, {x: 7}, {x: 8}, {x: 9},
-            {x: 1}, {x: 2}, {x: 3}, {x: 4}, {x: 5},
-            {x: 6}, {x: 7}, {x: 8}, {x: 9},
-        ];
-        const selections = selector.select(pool, 10);
-        const greaterThan9 = selections.filter(item => item.x > 9);
-        deepStrictEqual(10, selections.length);
-        assert(greaterThan9.length >= 1);
     });
 });
