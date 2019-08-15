@@ -30,6 +30,7 @@ const selector = new ItemSelector({
         bounds: [maxDuplication(2)],
     },
     mostlyOver5YearsOld: {
+        // If this is a used bookstore, then we want mostly older materials
         value: ({published_at}) => new Date(published_at).getYear() < new Date().getYear() - 5,
         bounds: [minPercentage(.9)],
     },
@@ -44,9 +45,13 @@ const pool = collect(JSON.parse(fs.readFileSync(filename)))
             || !item.published_at
             || !item.has_english
             || !item.image
+            || item.image.height < 10
+            || item.image.width < 10
+            || !item.pages
+            || item.pages == 1
     })
     .all();
 
-const selected = selector.select(pool, 10);
+const selected = selector.select(pool);
 
 console.log(JSON.stringify(selected));
