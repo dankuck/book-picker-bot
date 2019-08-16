@@ -2,7 +2,7 @@
 require('dotenv').config();
 
 const count = process.argv[2] || 1;
-const filename = process.argv[3] || null;
+const foldername = process.argv[3] || null;
 
 const fs = require('fs');
 const collect = require('collect.js');
@@ -30,13 +30,12 @@ const calls = range(count)
             )
     });
 
-if (filename) {
-    const allSearches = [];
-    const addSearch = search => {
-        allSearches.push(search);
-        fs.writeFileSync(filename, JSON.stringify(allSearches));
+if (foldername) {
+    const writeSearch = search => {
+        const {word} = search;
+        fs.writeFileSync(`${foldername}/${word}.search.json`, JSON.stringify(search));
     };
-    calls.forEach(call => call.then(addSearch))
+    calls.forEach(call => call.then(writeSearch))
 } else {
     Promise.all(calls)
         .then(
