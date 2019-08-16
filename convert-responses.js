@@ -1,17 +1,19 @@
 
 require('dotenv').config();
 
-const filename = process.argv[2] || (() => {throw new Error('No filename provided')})();
-
-const collect = require('collect.js');
 const fs = require('fs');
+const collect = require('collect.js');
 const convertResponse = require('./amazon/convert-response.js');
 
-const searches = JSON.parse(fs.readFileSync(filename));
+const filenames = process.argv.slice(2);
+if (filenames.length === 0) {
+    throw new Error('No filename provided');
+}
 
 const errors = [];
 
-const converted = searches
+const result = filenames
+    .map(filename => JSON.parse(fs.readFileSync(filename)))
     .map(({word, results}) => {
         try {
             return convertResponse(results, word)
@@ -19,9 +21,10 @@ const converted = searches
             errors.push(e.message);
             return [];
         }
-    });
+    })
+    .reduce((acc, array) => acc.concat(array), []);
 
-console.log(JSON.stringify(converted));
+console.log(JSON.stringify(result));
 
 if (errors.length > 0) {
     collect(errors)
