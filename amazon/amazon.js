@@ -17,41 +17,44 @@ module.exports = {
         if (!secret_key) {
             throw new Error('define AMAZON_KEY_SECRET in .env');
         }
-        const domain = 'webservices.amazon.com';
-        const path = '/onca/xml';
-        const params = {
-            'AssociateTag': 'dankuck-20',
-            'AWSAccessKeyId': access_key_id,
-            'Condition': 'Used',
-            'Keywords': word,
-            'Operation': 'ItemSearch',
-            'ResponseGroup': 'Images,ItemAttributes,Offers,BrowseNodes',
-            'SearchIndex': 'Books',
-            'Service': 'AWSECommerceService',
-            'Timestamp': new Date().toISOString(),
-        };
-        const query_keys = Object.keys(params).sort();
-        const canonical_query_string = query_keys
-            .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(params[key]))
-            .join('&');
-        const string_to_sign = `GET\n${domain}\n${path}\n${canonical_query_string}`;
-        const hmac = createHmac('sha256', secret_key)
-            .update(string_to_sign)
-            .digest();
-        const signature = btoa(hmac);
-        params.Signature = signature;
-        const urlString = url.format({
-            protocol: 'https:',
-            hostname: domain,
-            pathname: path,
-            query: params,
-        });
+
         return queue
-            .getPromise(() => axios.get(urlString))
-            .then(response => {
-                return new Promise((resolve, reject) => {
-                    xml2js(response.data, (err, result) => err ? reject(err) : resolve(result))
+            .getPromise(() => {
+                const domain = 'webservices.amazon.com';
+                const path = '/onca/xml';
+                const params = {
+                    'AssociateTag': 'dankuck-20',
+                    'AWSAccessKeyId': access_key_id,
+                    'Condition': 'Used',
+                    'Keywords': word,
+                    'Operation': 'ItemSearch',
+                    'ResponseGroup': 'Images,ItemAttributes,Offers,BrowseNodes',
+                    'SearchIndex': 'Books',
+                    'Service': 'AWSECommerceService',
+                    'Timestamp': new Date().toISOString(),
+                };
+                const query_keys = Object.keys(params).sort();
+                const canonical_query_string = query_keys
+                    .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(params[key]))
+                    .join('&');
+                const string_to_sign = `GET\n${domain}\n${path}\n${canonical_query_string}`;
+                const hmac = createHmac('sha256', secret_key)
+                    .update(string_to_sign)
+                    .digest();
+                const signature = btoa(hmac);
+                params.Signature = signature;
+                const urlString = url.format({
+                    protocol: 'https:',
+                    hostname: domain,
+                    pathname: path,
+                    query: params,
                 });
+                return axios.get(urlString)
+                    .then(response => {
+                        return new Promise((resolve, reject) => {
+                            xml2js(response.data, (err, result) => err ? reject(err) : resolve(result))
+                        });
+                    });
             });
     },
 };
