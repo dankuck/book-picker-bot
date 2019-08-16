@@ -8,7 +8,6 @@
  |
  */
 
-
 module.exports = class SlowQueue
 {
     /**
@@ -24,8 +23,9 @@ module.exports = class SlowQueue
     /**
      * Returns a new Promise that will resolve when the queue reaches it. That
      * could be immediately.
-     * If cb is given, it will be called when the queue reaches this promise,
-     * and the wait interval will not start until cb() is completed.
+     * If cb is given, it will be called when the queue reaches this promise.
+     * If cb returns a Promise, the queue will wait until the Promise completes
+     * before starting the next wait interval.
      * @param {Function} cb an optional callback
      * @return {Promise}
      */

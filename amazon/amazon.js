@@ -28,13 +28,13 @@ module.exports = {
         return queue
             .getPromise(() => {
                 return client.search({
-                    'AssociateTag': 'dankuck-20',
-                    'Condition': 'Used',
-                    'Keywords': word,
-                    'Operation': 'ItemSearch',
+                    'AssociateTag':  'dankuck-20',
+                    'Condition':     'Used',
+                    'Keywords':      word,
+                    'Operation':     'ItemSearch',
                     'ResponseGroup': 'Images,ItemAttributes,Offers,BrowseNodes',
-                    'SearchIndex': 'Books',
-                    'Service': 'AWSECommerceService',
+                    'SearchIndex':   'Books',
+                    'Service':       'AWSECommerceService',
                 });
             })
             .then(response => parseXml(response.data));

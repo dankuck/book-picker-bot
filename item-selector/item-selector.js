@@ -26,7 +26,7 @@ const collect = require('collect.js');
  |     // This example creates an ItemSelector that will build arrays that
  |     // have no more than two elements greater than 9.
  |     new ItemSelector({
- |         onlyTwoGreaterThan9: {
+ |         'only two greater than 9': {
  |             value: (element) => element > 9,
  |             bounds: [
  |                 (values) => values.filter(Boolean).length <= 2,
@@ -47,7 +47,7 @@ const collect = require('collect.js');
  |
  |     // Only 2 or less of the result elements should be greater than 9
  |     new ItemSelector({
- |         onlyTwoGreaterThan9: {
+ |         'only two greater than 9': {
  |             value: (element) => element > 9,
  |             bounds: [ItemSelector.maxCount(2)],
  |         },
@@ -62,11 +62,11 @@ const collect = require('collect.js');
  |
  | Example:
  |
- |     // Only 2 or less of the result elements should be greater than 9
+ |     // At least 2 of the result elements should be greater than 9
  |     new ItemSelector({
- |         onlyTwoGreaterThan9: {
+ |         'at least two greater than 9': {
  |             value: (element) => element > 9,
- |             bounds: [ItemSelector.maxCount(2)],
+ |             bounds: [ItemSelector.minCount(2)],
  |         },
  |     });
  |
@@ -75,11 +75,19 @@ const collect = require('collect.js');
  |-----------------------------
  | Ensure a certain percentage or less of elements match the value function.
  |
+ | This rounds up to the nearest whole number. For example, if `percentage`
+ | is .25 and there are 10 items, then 3 of them may match. If there is only 1
+ | element, then it may or may not match.
+ |
+ | Because of this rounding, it's possible to include a `maxPercentage` and
+ | `minPercentage` in the same bounds array if they are not obviously
+ | conflicting.
+ |
  | Example:
  |
  |     // Only 10% or less of the result elements should be greater than 9
  |     new ItemSelector({
- |         onlyTenPercentGreaterThan9: {
+ |         'only 10% are greater than 9': {
  |             value: (element) => element > 9,
  |             bounds: [ItemSelector.maxPercentage(.1)],
  |         },
@@ -94,11 +102,11 @@ const collect = require('collect.js');
  |
  | Example:
  |
- |     // Only 10% or less of the result elements should be greater than 9
+ |     // At least 10% of the result elements should be greater than 9
  |     new ItemSelector({
- |         onlyTenPercentGreaterThan9: {
+ |         'at least 10% are greater than 9': {
  |             value: (element) => element > 9,
- |             bounds: [ItemSelector.maxPercentage(.1)],
+ |             bounds: [ItemSelector.minPercentage(.1)],
  |         },
  |     });
  |
@@ -112,7 +120,7 @@ const collect = require('collect.js');
  |
  |     // Only allow 2 items that have any particular category
  |     new ItemSelector({
- |         onlyTwoFromEachCategory: {
+ |         'only 2 from each category': {
  |             value: (element) => element.category,
  |             bounds: [ItemSelector.maxDuplication(2)],
  |         },
@@ -211,13 +219,19 @@ class ItemSelector {
 /**
  * Returns a function that evaluates to true IFF the true values of the given
  * array are less than or equal to `percentage` of the full length of the array
+ *
+ * This rounds to the next whole number. For exmaple, if `percentage` is .6 and
+ * the length is 8, then at most 5 may be true, rounded up from 4.8.
+ *
  * @param  {float} percentage value from 0 to 1
  * @return {Function}
  */
 ItemSelector.maxPercentage = function maxPercentage(percentage) {
-    return (values) =>
-        values.filter(Boolean).length / values.length
-        <= percentage;
+    return (values) => {
+        const number = Math.ceil(percentage * values.length);
+        const max = ItemSelector.maxCount(number);
+        return max(values);
+    };
 };
 
 /**
@@ -229,7 +243,7 @@ ItemSelector.maxPercentage = function maxPercentage(percentage) {
  */
 ItemSelector.minPercentage = function minPercentage(percentage) {
     return (values) => {
-        const number = percentage * values.length;
+        const number = Math.ceil(percentage * values.length);
         const min = ItemSelector.minCount(number);
         return min(values);
     };

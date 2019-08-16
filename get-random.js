@@ -2,7 +2,9 @@
 require('dotenv').config();
 
 const count = process.argv[2] || 1;
+const filename = process.argv[3] || null;
 
+const fs = require('fs');
 const collect = require('collect.js');
 const amazon = require('./amazon/amazon');
 const randomWord = require('./words/random-word');
@@ -19,15 +21,28 @@ const calls = range(count)
                 },
                 (error) => {
                     console.error({word, error});
+                    if (error.message === 'Request failed with status code 503') {
+                        console.error('Throttling detected. Exiting.');
+                        process.exit();
+                    }
                     return {word, error};
                 }
             )
     });
 
-Promise.all(calls)
-    .then(
-        (searches) => {
-            console.log(JSON.stringify(searches));
-        },
-        console.error
-    );
+if (filename) {
+    const allSearches = [];
+    const addSearch = search => {
+        allSearches.push(search);
+        fs.writeFileSync(filename, JSON.stringify(allSearches));
+    };
+    calls.forEach(call => call.then(addSearch))
+} else {
+    Promise.all(calls)
+        .then(
+            (searches) => {
+                console.log(JSON.stringify(searches));
+            },
+            console.error
+        );
+}

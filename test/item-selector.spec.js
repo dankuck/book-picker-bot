@@ -20,8 +20,10 @@ describe('item-selector.js', function () {
         const maxHalf = maxPercentage(.5);
         const isMaxHalf = maxHalf([true, false]);
         assert(isMaxHalf === true);
-        const isNotMaxHalf = maxHalf([true]);
+        const isNotMaxHalf = maxHalf([true, true, true, false]);
         assert(isNotMaxHalf === false);
+        const isMaxHalfBecauseOfRounding = maxHalf([true, true, false]);
+        assert(isMaxHalfBecauseOfRounding === true);
 
         const maxZero = maxPercentage(0);
         const isMaxZero = maxZero([false]);
@@ -167,7 +169,7 @@ describe('item-selector.js', function () {
         const selector = new ItemSelector({
             greaterThan9: {
                 value: item => item.x > 9,
-                bounds: [maxPercentage(.1), maxCount(1)],
+                bounds: [maxPercentage(.1), minPercentage(.1)],
             },
         });
         const pool = [
@@ -190,8 +192,8 @@ describe('item-selector.js', function () {
         ];
         const selections = selector.select(pool, 20);
         const greaterThan9 = selections.filter(item => item.x > 9);
-        assert(greaterThan9.length <= 1);
         deepStrictEqual(20, selections.length);
+        deepStrictEqual(2, greaterThan9.length);
     });
 
     it('should return [] if boundaries cannot be met', function () {

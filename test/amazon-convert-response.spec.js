@@ -30,7 +30,6 @@ describe('amazon/convert-response.js', function () {
         const {results, word} = getTestData('amazon-response-leathery.json');
         const [item] = amazonConvertResponse(results, word);
         const correct = {
-            "asin": "1446519716",
             "url": "https://www.amazon.com/Mushrooms-Great-Lake-Region-Wisconsin/dp/1446519716?SubscriptionId=AKIAIOY4QZDWXZXIEAKA&tag=dankuck-20&linkCode=xm2&camp=2025&creative=165953&creativeASIN=1446519716",
             "image": {
                 "url": "https://images-na.ssl-images-amazon.com/images/I/51-sp1mcBtL._SL160_.jpg",
@@ -72,9 +71,8 @@ describe('amazon/convert-response.js', function () {
                 "Plants",
                 "Biological Sciences",
                 "Science & Math",
-                "Subjects",
-                "Books"
             ],
+            "major_category": "Science & Math",
             "is_fiction": false,
             "search": "leathery"
         };

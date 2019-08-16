@@ -35,6 +35,14 @@ const isFiction = function (categories) {
         );
 };
 
+const adultCategories = ['Adult', 'Sex'];
+
+const looksLikeAdultContent = function (item, categories) {
+    return Boolean(Number(first(item, 'ItemAttributes.0.IsAdultProduct.0')))
+        || first(item, 'ItemAttributes.0.Format.0') === 'Adult'
+        || collect(categories).intersect(adultCategories).length > 0;
+}
+
 module.exports = function amazonConvertResponse(response, search) {
     const error = first(response, 'ItemSearchResponse.Items.0.Request.0.Errors.0.Error.0.Message');
     if (error) {
@@ -74,23 +82,24 @@ module.exports = function amazonConvertResponse(response, search) {
             const published_at = first(item, 'ItemAttributes.0.PublicationDate.0')
                 ? new Date(first(item, 'ItemAttributes.0.PublicationDate.0'))
                 : null;
-            const categories = buildCategoryList(item);
+            const categories = buildCategoryList(item)
+                .filter(category => ! ['Books', 'Subjects'].includes(category));
+            const is_adult_only = looksLikeAdultContent(item);
             return {
-                asin: first(item, 'ASIN.0'),
+                title: first(item, 'ItemAttributes.0.Title.0'),
+                isbn: first(item, 'ItemAttributes.0.ISBN.0'),
                 url: first(item, 'DetailPageURL.0'),
                 image,
                 by: all(item, 'ItemAttributes.0.Author.0')
                     .concat(all(item, 'ItemAttributes.0.Creator.0._')),
-                isbn: first(item, 'ItemAttributes.0.ISBN.0'),
-                title: first(item, 'ItemAttributes.0.Title.0'),
-                is_adult_only: Boolean(Number(first(item, 'ItemAttributes.0.IsAdultProduct.0'))),
+                is_adult_only,
                 dimensions,
                 languages,
                 has_english: languages.includes('English'),
                 pages: Number(first(item, 'ItemAttributes.0.NumberOfPages.0')),
                 published_at,
                 format: first(item, 'ItemAttributes.0.Format.0'),
-                is_memorobilia: Boolean(Number(first(item, 'ItemAttributes.0.IsMemorabilia.0'))),
+                is_memorabilia: Boolean(Number(first(item, 'ItemAttributes.0.IsMemorabilia.0'))),
                 prices: {
                     'new': first(item, 'OfferSummary.0.LowestNewPrice.0.FormattedPrice.0'),
                     'used': first(item, 'OfferSummary.0.LowestUsedPrice.0.FormattedPrice.0'),
@@ -98,6 +107,7 @@ module.exports = function amazonConvertResponse(response, search) {
                 },
                 offer_counts,
                 categories,
+                major_category: collect(categories).last() || '',
                 is_fiction: isFiction(categories),
                 search,
             };
