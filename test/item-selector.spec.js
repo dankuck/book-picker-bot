@@ -16,6 +16,11 @@ describe('item-selector.js', function () {
         assert(new ItemSelector({}));
     });
 
+    it('should not complain if asked to select from nothing', function () {
+        const selected = new ItemSelector({}).select([]);
+        assert(selected.length === 0);
+    });
+
     it('should have a maxPercentage boundary builder', function () {
         const maxHalf = maxPercentage(.5);
         const isMaxHalf = maxHalf([true, false]);
@@ -367,5 +372,29 @@ describe('item-selector.js', function () {
         ];
         const selections = selector.select(pool, 10);
         deepStrictEqual(2, selections.length);
+    });
+
+    it('should retain all items from start_items', function () {
+        const selector = new ItemSelector({
+            greaterThan9: {
+                value: item => item.x > 9,
+                bounds: [maxPercentage(.5)],
+            },
+        });
+        const pool = [
+            // greater than 9
+            {x: 10}, {x: 11}, {x: 12}, {x: 13}, {x: 14},
+            {x: 15},
+            // less than or equal to 9
+            {x: 1}, {x: 2}, {x: 3}, {x: 4}, {x: 5},
+            {x: 6}, {x: 7}, {x: 8}, {x: 9},
+        ];
+        const start_items = [{x: 1}, {x: 10}];
+        const selections = selector.select(pool, 10, start_items);
+        const greaterThan9 = selections.filter(item => item.x > 9);
+        deepStrictEqual(10, selections.length);
+        assert(greaterThan9.length <= 5);
+        assert(selections.includes(start_items[0]));
+        assert(selections.includes(start_items[1]));
     });
 });

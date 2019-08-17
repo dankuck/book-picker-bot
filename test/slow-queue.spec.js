@@ -106,12 +106,13 @@ describe('SlowQueue', function () {
                 const diff_2_to_3 = thirdTime - secondTime;
                 assert(diff_1_to_2 <= 2, `1st and 2nd times are too far apart: ${secondTime} - ${firstTime} = ${diff_1_to_2}`);
                 assert(diff_2_to_3 >= 10, `2nd and 3rd times are not at least 10ms apart: ${thirdTime} - ${secondTime} = ${diff_2_to_3}`);
-                assert(diff_2_to_3 <= 12, `2nd and 3rd times are more than 12ms apart: ${thirdTime} - ${secondTime} = ${diff_2_to_3}`);
+                assert(diff_2_to_3 <= 15, `2nd and 3rd times are more than 15ms apart: ${thirdTime} - ${secondTime} = ${diff_2_to_3}`);
             })
             .then(done, done);
     });
 
-    it.only('runs in several groups if wait_frequency is specified', function (done) {
+    it('runs in several groups if wait_frequency is specified', function (done) {
+        this.slow(2000);
         const queue  = new SlowQueue(10, 2);
         let firstTime = null;
         let secondTime = null;
@@ -140,7 +141,7 @@ describe('SlowQueue', function () {
                 const diff_3_to_4 = fourthTime - thirdTime;
                 assert(diff_1_to_2 <= 2, `1st and 2nd times are too far apart: ${secondTime} - ${firstTime} = ${diff_1_to_2}`);
                 assert(diff_2_to_3 >= 10, `2nd and 3rd times are not at least 10ms apart: ${thirdTime} - ${secondTime} = ${diff_2_to_3}`);
-                assert(diff_2_to_3 <= 12, `2nd and 3rd times are more than 12ms apart: ${thirdTime} - ${secondTime} = ${diff_2_to_3}`);
+                assert(diff_2_to_3 <= 15, `2nd and 3rd times are more than 15ms apart: ${thirdTime} - ${secondTime} = ${diff_2_to_3}`);
                 assert(diff_3_to_4 <= 2, `3rd and 4th times are too far apart: ${fourthTime} - ${thirdTime} = ${diff_3_to_4}`);
             })
             .then(done, done);

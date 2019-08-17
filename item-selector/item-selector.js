@@ -149,11 +149,12 @@ class ItemSelector {
      * if necessary.
      * @param  {array} pool
      * @param  {number} count
+     * @param  {array} start_items - usually the results of a call to `select`
      * @return {array}
      */
-    select(pool, count = Infinity) {
+    select(pool, count = Infinity, start_items = []) {
         pool = collect(pool).shuffle().all();
-        const selected = [];
+        const selected = [...start_items];
         let startLength;
         do {
             startLength = selected.length;
