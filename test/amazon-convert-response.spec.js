@@ -54,7 +54,7 @@ describe('amazon/convert-response.js', function () {
             "has_english": true,
             "pages": 516,
             "published_at": new Date("2015-05-13T00:00:00.000Z"),
-            "is_memorobilia": false,
+            "is_memorabilia": false,
             "prices": {
                 "new": "$32.03",
                 "used": "$44.00",
