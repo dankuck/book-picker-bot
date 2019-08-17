@@ -26,19 +26,29 @@ const parseXml = xml => new Promise((resolve, reject) => {
 });
 
 module.exports = {
-    search(word) {
+    search(words) {
+        if (! (words instanceof Array)) {
+            const word = words;
+            return this.search([word])
+                .then(results => results[0]);
+        }
         return queue
-            .getPromise(() => {
-                return client.search({
-                    'AssociateTag':  associate_tag,
-                    'Condition':     'Used',
-                    'Keywords':      word,
-                    'Operation':     'ItemSearch',
-                    'ResponseGroup': 'Images,ItemAttributes,Offers,BrowseNodes',
-                    'SearchIndex':   'Books',
-                    'Service':       'AWSECommerceService',
-                });
-            })
-            .then(response => parseXml(response.data));
-    },
+            .push(() => {
+                const promises = words
+                    .map(word => {
+                        return client
+                            .search({
+                                'AssociateTag':  associate_tag,
+                                'Condition':     'Used',
+                                'Keywords':      word,
+                                'Operation':     'ItemSearch',
+                                'ResponseGroup': 'Images,ItemAttributes,Offers,BrowseNodes',
+                                'SearchIndex':   'Books',
+                                'Service':       'AWSECommerceService',
+                            })
+                            .then(response => parseXml(response.data));
+                    });
+                return Promise.all(promises)
+            });
+    }
 };
