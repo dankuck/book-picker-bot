@@ -67,12 +67,27 @@ describe('amazon/convert-response.js', function () {
                 "refurbished": 0
             },
             "categories": [
-                "Mushrooms",
-                "Plants",
-                "Biological Sciences",
                 "Science & Math",
+                "Biological Sciences",
+                "Plants",
+                "Mushrooms",
+                "Travel",
+                "United States",
+                "Midwest",
             ],
-            "major_category": "Science & Math",
+            "full_categories": [
+                [
+                    "Science & Math",
+                    "Biological Sciences",
+                    "Plants",
+                    "Mushrooms",
+                ],
+                [
+                    "Travel",
+                    "United States",
+                    "Midwest",
+                ],
+            ],
             "is_fiction": false,
             "search": "leathery"
         };

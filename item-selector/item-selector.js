@@ -197,7 +197,10 @@ class ItemSelector {
     compileProfiles(profiles) {
         profiles = collect(profiles);
         return collect(this.rules)
-            .map((rule, ruleName) => profiles.pluck(ruleName).all())
+            .map((rule, ruleName) => {
+                return profiles
+                    .reduce((acc, profile) => acc.concat(profile[ruleName]), []);
+            })
             .all();
     }
 

@@ -1,27 +1,46 @@
 const collect = require('collect.js');
 
-const all = (object, path) => collect([object]).pluck(path).filter(Boolean).all();
-const first = (object, path) => all(object, path)[0];
+const all = (object, path) => first(object, path) || [];
+const first = (object, path) => collect([object]).pluck(path).filter(Boolean).first();
 
 const toInches = function (measurement) {
     const unit = first(measurement, '$.Units');
     const value = first(measurement, '_');
     if (unit === 'hundredths-inches') {
         return value / 100;
+    } else if (unit === 'Inches') {
+        return value;
     } else {
         throw new Error('Unknown unit `' + unit + '` in ' + JSON.stringify(measurement));
     }
 };
 
-const buildCategoryList = function (item) {
-    let queue = all(item, 'BrowseNodes.0.BrowseNode.0');
-    const categories = [];
-    while (queue.length > 0) {
-        const node = queue.pop();
-        categories.push(first(node, 'Name.0'));
-        queue = queue.concat(all(node, 'Ancestors.0.BrowseNode.0'));
-    }
-    return categories;
+const buildCategoryLists = function (item) {
+    const categoryArrays = buildCategoryArrays(first(item, 'BrowseNodes.0.BrowseNode') || []);
+    const categories = collect(categoryArrays)
+        .flatten()
+        .unique()
+        .all();
+    return {
+        categories,
+        full_categories: categoryArrays,
+    };
+};
+
+const buildCategoryArrays = function(nodes) {
+    return collect(nodes)
+        .map(node => {
+            const name = first(node, 'Name.0');
+            const ancestors = first(node, 'Ancestors.0.BrowseNode');
+            if (!ancestors) {
+                return [[name]];
+            } else {
+                const categoryArrays = buildCategoryArrays(ancestors);
+                return categoryArrays.map(categoryArray => [...categoryArray, name]);
+            }
+        })
+        .flatten(1)
+        .all();
 };
 
 const isFiction = function (categories) {
@@ -35,13 +54,27 @@ const isFiction = function (categories) {
         );
 };
 
-const adultCategories = ['Adult', 'Sex'];
+const adultCategories = ['Adult', 'Sex', 'Erotica'];
 
 const looksLikeAdultContent = function (item, categories) {
     return Boolean(Number(first(item, 'ItemAttributes.0.IsAdultProduct.0')))
         || first(item, 'ItemAttributes.0.Format.0') === 'Adult'
         || collect(categories).intersect(adultCategories).length > 0;
 }
+
+const getDimensions = function (item) {
+    const height = first(item, 'ItemAttributes.0.ItemDimensions.0.Height.0');
+    const length = first(item, 'ItemAttributes.0.ItemDimensions.0.Length.0');
+    const width = first(item, 'ItemAttributes.0.ItemDimensions.0.Width.0');
+    if (height && length && width) {
+        return {
+            height: toInches(height),
+            length: toInches(length),
+            width:  toInches(width),
+        };
+    }
+    return null;
+};
 
 module.exports = function amazonConvertResponse(response, search) {
     const error = first(response, 'ItemSearchResponse.Items.0.Request.0.Errors.0.Error.0.Message');
@@ -53,7 +86,7 @@ module.exports = function amazonConvertResponse(response, search) {
         .map(x => x || [])
         .flatten(1)
         .map((item) => {
-            const image = all(item, 'MediumImage.0')
+            const image = all(item, 'MediumImage')
                 .filter(Boolean)
                 .map(image => {
                     return {
@@ -63,14 +96,8 @@ module.exports = function amazonConvertResponse(response, search) {
                     };
                 })
                 [0];
-            const dimensions = first(item, 'ItemAttributes.0.ItemDimensions.0.Height.0')
-                ? {
-                    height: toInches(first(item, 'ItemAttributes.0.ItemDimensions.0.Height.0')),
-                    length: toInches(first(item, 'ItemAttributes.0.ItemDimensions.0.Length.0')),
-                    width: toInches(first(item, 'ItemAttributes.0.ItemDimensions.0.Width.0')),
-                }
-                : null;
-            const languages = all(item, 'ItemAttributes.0.Languages.0.Language.0.Name.0');
+            const dimensions = getDimensions(item);
+            const languages = all(item, 'ItemAttributes.0.Languages.0.Language.0.Name');
             const offer_counts = first(item, 'OfferSummary.0.TotalNew.0')
                 ? {
                     'new': Number(first(item, 'OfferSummary.0.TotalNew.0')),
@@ -82,16 +109,21 @@ module.exports = function amazonConvertResponse(response, search) {
             const published_at = first(item, 'ItemAttributes.0.PublicationDate.0')
                 ? new Date(first(item, 'ItemAttributes.0.PublicationDate.0'))
                 : null;
-            const categories = buildCategoryList(item)
+            let {categories, full_categories} = buildCategoryLists(item);
+            categories = categories
                 .filter(category => ! ['Books', 'Subjects'].includes(category));
+            full_categories = full_categories.map(full_category => {
+                return full_category
+                    .filter(category => ! ['Books', 'Subjects'].includes(category));
+            });
             const is_adult_only = looksLikeAdultContent(item);
             return {
                 title: first(item, 'ItemAttributes.0.Title.0'),
                 isbn: first(item, 'ItemAttributes.0.ISBN.0'),
                 url: first(item, 'DetailPageURL.0'),
                 image,
-                by: all(item, 'ItemAttributes.0.Author.0')
-                    .concat(all(item, 'ItemAttributes.0.Creator.0._')),
+                by: all(item, 'ItemAttributes.0.Author')
+                    .concat(all(item, 'ItemAttributes.0.Creator.*._')),
                 is_adult_only,
                 dimensions,
                 languages,
@@ -107,7 +139,7 @@ module.exports = function amazonConvertResponse(response, search) {
                 },
                 offer_counts,
                 categories,
-                major_category: collect(categories).last() || '',
+                full_categories,
                 is_fiction: isFiction(categories),
                 search,
             };

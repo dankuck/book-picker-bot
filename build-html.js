@@ -5,6 +5,7 @@ const filename = process.argv[2] || (() => {throw new Error('No filename provide
 
 const collect = require('collect.js');
 const fs = require('fs');
+const categorize = require('./categorizer.js');
 
 const selected = JSON.parse(fs.readFileSync(filename));
 
@@ -12,7 +13,7 @@ const cards = collect(selected)
     .groupBy(item => item.is_fiction ? 'Fiction' : 'Non-fiction')
     .map((group, groupName) => {
         const fictionOrNonHtml = group
-            .groupBy(item => item.categories.slice(-3, -2)[0] || '') // third-to-last
+            .groupBy(item => categorize(item))
             .map((group, groupName) => {
                 const itemsHtml = group
                     .map(item => {

@@ -5,6 +5,7 @@ const {
     minCount,
     minPercentage,
 } = require('./item-selector/item-selector.js');
+const categorize = require('./categorizer.js');
 
 module.exports = {
     rules: {
@@ -15,7 +16,7 @@ module.exports = {
             bounds: [minPercentage(.9)],
         },
         'There should be no more than 2 of the same search term in the same section': {
-            value: item => item.search + ':' + item.major_category,
+            value: item => item.search + ':' + categorize(item),
             bounds: [maxDuplication(2)],
         },
         'Most books should be over 5 years old': {

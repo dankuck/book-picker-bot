@@ -397,4 +397,41 @@ describe('item-selector.js', function () {
         assert(selections.includes(start_items[0]));
         assert(selections.includes(start_items[1]));
     });
+
+    it('should concat array values if requested', function () {
+        let caught_values = null;
+        const selector = new ItemSelector({
+            greaterThan9: {
+                value: item => [item],
+                bounds: [
+                    (values) => {
+                        caught_values = values;
+                        return true;
+                    }
+                ],
+            },
+        });
+        const pool = ['red', 'green', 'silver'];
+        selector.select(pool);
+        deepStrictEqual(['silver', 'red', 'green'].sort(), caught_values.sort());
+    });
+
+    it('should not double-concat array values unless requested', function () {
+        let caught_values = null;
+        const selector = new ItemSelector({
+            greaterThan9: {
+                value: item => [[item]],
+                bounds: [
+                    (values) => {
+                        caught_values = values;
+                        return true;
+                    }
+                ],
+            },
+        });
+        const pool = ['red', 'green', 'silver'];
+        selector.select(pool);
+        assert(caught_values.length === 3);
+        caught_values.forEach(value => assert(value instanceof Array));
+    });
 });
