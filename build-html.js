@@ -27,7 +27,7 @@ const cards = collect(selected)
                     .join("\n");
                 return `
                     <div class="row">
-                        <h2>${groupName || 'Misc'}</h2>
+                        <h2>${groupName || 'Misc'} (${group.count()})</h2>
                     </div>
                     <div class="row">
                         ${itemsHtml}
@@ -49,6 +49,7 @@ console.log(`
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <body>
         <div class="container">
+            ${selected.length} books
             ${cards}
         </div>
     </body>

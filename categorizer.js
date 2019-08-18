@@ -14,14 +14,12 @@ module.exports = function categorize(item) {
             return 'Literature';
         }
     } else {
-        if (/reference|science/i.test(categories)) {
-            return 'Reference';
-        } else if (/help/i.test(categories)) {
+        if (/help/i.test(categories)) {
             return 'Self Help';
         } else if (/religion|christian|buddh|jewish|muslim|islam/i.test(categories)) {
             return 'Religion';
         } else {
-            return 'Non-fiction';
+            return 'Reference';
         }
     }
 };
