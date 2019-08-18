@@ -13,7 +13,8 @@ const AmazonClient = require('./client.js');
         }
     });
 
-const queue = new SlowQueue(process.env.AMAZON_WAIT_TIME || 1100, process.env.AMAZON_REQUEST_GROUP_SIZE || 1);
+const wait_time = JSON.parse(process.env.AMAZON_WAIT_TIME || 1100);
+const queue = new SlowQueue(wait_time);
 
 const access_key_id = process.env.AMAZON_KEY_ID;
 const secret_key = process.env.AMAZON_KEY_SECRET;

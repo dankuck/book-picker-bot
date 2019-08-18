@@ -83,8 +83,8 @@ describe('SlowQueue', function () {
             .then(done, done);
     });
 
-    it('runs multiples without a wait if wait_frequency is specified', function (done) {
-        const queue  = new SlowQueue(10, 2);
+    it('uses variable wait_times in order if given an array', function (done) {
+        const queue  = new SlowQueue([0, 10]);
         let firstTime = null;
         let secondTime = null;
         let thirdTime = null;
@@ -111,9 +111,9 @@ describe('SlowQueue', function () {
             .then(done, done);
     });
 
-    it('runs in several groups if wait_frequency is specified', function (done) {
+    it('loops back when end of wait_times is reached', function (done) {
         this.slow(2000);
-        const queue  = new SlowQueue(10, 2);
+        const queue  = new SlowQueue([0, 10]);
         let firstTime = null;
         let secondTime = null;
         let thirdTime = null;

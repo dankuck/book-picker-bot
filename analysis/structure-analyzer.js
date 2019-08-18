@@ -22,6 +22,9 @@ function describeType(value) {
     if (typeof value === 'object') {
         return value.constructor.name;
     }
+    if (typeof value === 'boolean') {
+        return value ? 'true' : 'false';
+    }
     return typeof value;
 }
 

@@ -3,9 +3,9 @@
  | slow-queue.js
  |------------------------------------------------
  | A SlowQueue provides a Promise that will resolve when its turn comes up.
- | The queue will only resolve one Promise per interval. The interval time
- | is given to the constructor. To run more than one Promise per interval,
- | pass a second integer parameter to the constructor.
+ | The queue will only resolve one promise per interval. The interval time
+ | is given to the constructor. This can throttle access to an API.
+ |
  */
 
 module.exports = class SlowQueue
@@ -13,13 +13,11 @@ module.exports = class SlowQueue
     /**
      * Create a SlowQueue
      * @param  {int} wait_time_ms milliseconds to wait between Promises
-     * @param  {int} wait_frequency wait after resolving this many Promises
      */
-    constructor(wait_time_ms, wait_frequency = 1) {
+    constructor(wait_time_ms) {
         this.queue = [];
-        this.wait_time_ms = wait_time_ms;
-        this.wait_frequency = wait_frequency;
-        this.tasks_since_last_wait = 0;
+        this.wait_time_ms = wait_time_ms instanceof Array ? wait_time_ms : [wait_time_ms];
+        this.wait_time_ms_index = 0;
         this.waiting = false;
     }
 
@@ -45,10 +43,6 @@ module.exports = class SlowQueue
      * again before the timeout completes, it silently returns. When the
      * timeout completes, this method is called again. If the queue is empty,
      * no more timeouts are scheduled.
-     *
-     * If wait_frequency was set, this runs that many tasks before initiating
-     * a wait time.
-     *
      * @return {void}
      */
     run() {
@@ -59,18 +53,23 @@ module.exports = class SlowQueue
             this.waiting = true;
             const task = this.queue.shift();
             task().finally(() => {
-                this.tasks_since_last_wait++;
-                if (this.tasks_since_last_wait >= this.wait_frequency) {
-                    this.tasks_since_last_wait = 0;
-                    setTimeout(() => {
-                        this.waiting = false;
-                        this.run();
-                    }, this.wait_time_ms);
-                } else {
+                setTimeout(() => {
                     this.waiting = false;
                     this.run();
-                }
+                }, this.nextWaitTime());
             });
         }
+    }
+
+    /**
+     * Gives the current wait time in the wait_time_ms array and incrments the
+     * index or loops back to zero.
+     * @return {int}
+     */
+    nextWaitTime() {
+        const wait_time_ms = this.wait_time_ms[this.wait_time_ms_index];
+        this.wait_time_ms_index = (this.wait_time_ms_index + 1)
+            % this.wait_time_ms.length;
+        return Number(wait_time_ms);
     }
 }

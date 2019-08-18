@@ -24,7 +24,10 @@ module.exports = {
         },
         'Most books should be fiction, but there should be a solid chunk of non-fiction': {
             value: item => item.is_fiction,
-            bounds: [minPercentage(.70), maxPercentage(.80)],
+            bounds: [
+                minPercentage(.50),
+                maxPercentage(.80),
+            ],
         },
     },
     reject: (item) => {
