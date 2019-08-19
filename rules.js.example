@@ -5,13 +5,16 @@ const {
     minCount,
     minPercentage,
 } = require('./item-selector/item-selector.js');
+const collect = require('collect.js');
 
 const categorize = function categorize(item) {
-    const categories = item.categories.join(' ');
-    if (/children/i.test(categories)) {
+    const categories = item.categories.join('; ');
+    if (/children/i.test(categories) && !/studies/i.test(categories)) {
         return 'Children';
     } else if (item.is_fiction) {
         if (/science/i.test(categories)) {
+            return 'Science Fiction';
+        } else if (/fantasy/i.test(categories)) {
             return 'Science Fiction';
         } else {
             return 'Literature';
@@ -25,6 +28,14 @@ const categorize = function categorize(item) {
             return 'Reference';
         }
     }
+};
+
+const adultCategories = ['Adult', 'Sex', 'Erotica'];
+
+const looksLikeAdultContent = (item) => {
+    return item.is_adult_only
+        || item.format === 'Adult'
+        || collect(item.categories).intersect(adultCategories).length > 0;
 };
 
 module.exports = {
@@ -62,7 +73,7 @@ module.exports = {
             || item.image.width < 10
             || !item.pages
             || item.pages == 1
-            || item.is_adult_only
+            || looksLikeAdultContent(item)
     },
     categorize,
 };
