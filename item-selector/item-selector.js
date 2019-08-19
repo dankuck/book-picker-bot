@@ -15,7 +15,8 @@ const collect = require('collect.js');
  | Each rule has a `value` method and an array of `bounds`.
  |
  | The `value` method accepts an element from the pool of potential elements
- | and returns a value that is relevant to this rule.
+ | and returns a value that is relevant to this rule. The results should be
+ | deterministic because they will only be calculated once.
  |
  | The `bounds` array holds 1 or more functions. Each `bounds` function
  | accepts an array of values for the given rule and returns true if and only
@@ -147,14 +148,28 @@ class ItemSelector {
      * Select items from `pool` such that the results match the rules given and
      * has no more than `count` items. Check the length of the array returned
      * if necessary.
+     *
+     * If start_items is given, the results will include all the values of
+     * start_items. You should ensure that start_items already matches the
+     * rules. If start_items is the result of a previous call to `select`, then
+     * it will be sure to match the rules.
+     *
      * @param  {array} pool
      * @param  {number} count
-     * @param  {array} start_items - usually the results of a call to `select`
+     * @param  {array} start_items
      * @return {array}
      */
     select(pool, count = Infinity, start_items = []) {
         pool = collect(pool).shuffle().all();
+        const cache = new Map();
+        const getProfile = item => {
+            return cache.get(item)
+                || cache
+                    .set(item, this.buildProfile(item))
+                    .get(item);
+        };
         const selected = [...start_items];
+        let lastCompile = this.compileAllProfiles(selected.map(item => this.buildProfile(item)));
         let startLength;
         do {
             startLength = selected.length;
@@ -162,10 +177,11 @@ class ItemSelector {
                 if (selected.includes(item)) {
                     continue;
                 }
-                const profiles = [...selected, item].map(item => this.buildProfile(item));
-                const compiled = this.compileProfiles(profiles);
+                const profile = getProfile(item);
+                const compiled = this.compileProfile(profile, lastCompile);
                 if (this.valuesAreWithinBounds(compiled)) {
                     selected.push(item);
+                    lastCompile = compiled;
                 }
                 if (selected.length >= count) {
                     break;
@@ -190,18 +206,26 @@ class ItemSelector {
     }
 
     /**
-     * Turn an array of profile objects into an object of arrays of rule values
-     * @param  {array} profiles
+     * Add a profile to a compilation of profiles
+     * @param  {array} profile
      * @return {object}
      */
-    compileProfiles(profiles) {
-        profiles = collect(profiles);
+    compileProfile(profile, lastCompile = {}) {
         return collect(this.rules)
             .map((rule, ruleName) => {
-                return profiles
-                    .reduce((acc, profile) => acc.concat(profile[ruleName]), []);
+                return (lastCompile[ruleName] || []).concat(profile[ruleName]);
             })
             .all();
+    }
+
+    /**
+     * Compile an array of profiles together
+     * @param  {Array} profiles
+     * @return {object}
+     */
+    compileAllProfiles(profiles) {
+        return profiles
+            .reduce((lastCompile, profile) => this.compileProfile(profile, lastCompile), {})
     }
 
     /**
@@ -282,7 +306,7 @@ ItemSelector.minCount = function minCount(number) {
 
 /**
  * Returns a function that evaluates to true IFF each element of the given
- * array is present `number` or fewer times.
+
  * @param  {number} number
  * @return {Function}
  */

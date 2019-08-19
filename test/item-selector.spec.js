@@ -107,7 +107,7 @@ describe('item-selector.js', function () {
                 bounds: [maxPercentage(.1)],
             },
         });
-        const counts = selector.compileProfiles([
+        const counts = selector.compileAllProfiles([
             {
                 x: 1,
             },
