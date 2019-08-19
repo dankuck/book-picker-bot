@@ -44,8 +44,8 @@ const buildCategoryArrays = function(nodes) {
 };
 
 const isFiction = function (categories) {
-    const fiction = /fiction|fantasy/i;
-    const nonfiction = /non\-?fiction/i;
+    const fiction = /fiction|fantasy|mystery|thriller/i;
+    const nonfiction = /non\-?fiction|true/i;
     return categories
         .reduce(
             (alreadyTrue, category) => alreadyTrue

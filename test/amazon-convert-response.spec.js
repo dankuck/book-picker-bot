@@ -100,6 +100,11 @@ describe('amazon/convert-response.js', function () {
         assert.deepStrictEqual(correct, item, 'Item did not convert as expected');
     });
 
+    it('gets all categories', function () {
+        // test against fixtures/amazon-response-zoogeographical.json which has children category nodes
+        assert(false);
+    });
+
     it('matches a known-bad result', function () {
         const items = amazonConvertResponse({}, '');
         assert(items.length === 0);
