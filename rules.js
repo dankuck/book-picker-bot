@@ -5,7 +5,27 @@ const {
     minCount,
     minPercentage,
 } = require('./item-selector/item-selector.js');
-const categorize = require('./categorizer.js');
+
+const categorize = function categorize(item) {
+    const categories = item.categories.join(' ');
+    if (/children/i.test(categories)) {
+        return 'Children';
+    } else if (item.is_fiction) {
+        if (/science/i.test(categories)) {
+            return 'Science Fiction';
+        } else {
+            return 'Literature';
+        }
+    } else {
+        if (/help/i.test(categories)) {
+            return 'Self Help';
+        } else if (/religion|christian|buddh|jewish|muslim|islam/i.test(categories)) {
+            return 'Religion';
+        } else {
+            return 'Reference';
+        }
+    }
+};
 
 module.exports = {
     rules: {
@@ -44,4 +64,5 @@ module.exports = {
             || item.pages == 1
             || item.is_adult_only
     },
+    categorize,
 };

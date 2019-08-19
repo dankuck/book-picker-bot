@@ -432,6 +432,6 @@ describe('item-selector.js', function () {
         const pool = ['red', 'green', 'silver'];
         selector.select(pool);
         assert(caught_values.length === 3);
-        caught_values.forEach(value => assert(value instanceof Array));
+        caught_values.forEach(value => assert(value instanceof Array, `${value} is not an Array`));
     });
 });

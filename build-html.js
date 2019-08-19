@@ -5,7 +5,7 @@ const filename = process.argv[2] || (() => {throw new Error('No filename provide
 
 const collect = require('collect.js');
 const fs = require('fs');
-const categorize = require('./categorizer.js');
+const {categorize} = require('./rules.js');
 
 const selected = JSON.parse(fs.readFileSync(filename));
 
