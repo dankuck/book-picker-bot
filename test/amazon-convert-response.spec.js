@@ -67,6 +67,8 @@ describe('amazon/convert-response.js', function () {
                 "refurbished": 0
             },
             "categories": [
+                "Books",
+                "Subjects",
                 "Science & Math",
                 "Biological Sciences",
                 "Plants",
@@ -77,12 +79,16 @@ describe('amazon/convert-response.js', function () {
             ],
             "full_categories": [
                 [
+                    "Books",
+                    "Subjects",
                     "Science & Math",
                     "Biological Sciences",
                     "Plants",
                     "Mushrooms",
                 ],
                 [
+                    "Books",
+                    "Subjects",
                     "Travel",
                     "United States",
                     "Midwest",

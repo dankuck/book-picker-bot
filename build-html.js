@@ -10,36 +10,25 @@ const {categorize} = require('./rules.js');
 const selected = JSON.parse(fs.readFileSync(filename));
 
 const cards = collect(selected)
-    .groupBy(item => item.is_fiction ? 'Fiction' : 'Non-fiction')
+    .groupBy(item => categorize(item))
     .map((group, groupName) => {
-        const fictionOrNonHtml = group
-            .groupBy(item => categorize(item))
-            .map((group, groupName) => {
-                const itemsHtml = group
-                    .map(item => {
-                        return `
-                            <div class="col-3">
-                                <img src="${item.image.url}" />
-                                <h5>${item.title}</h5>
-                            </div>
-                        `;
-                    })
-                    .join("\n");
+        const itemsHtml = group
+            .map(item => {
                 return `
-                    <div class="row">
-                        <h2>${groupName || 'Misc'} (${group.count()})</h2>
-                    </div>
-                    <div class="row">
-                        ${itemsHtml}
+                    <div class="col-3">
+                        <img src="${item.image.url}" />
+                        <h5>${item.title}</h5>
                     </div>
                 `;
             })
             .join("\n");
         return `
             <div class="row">
-                <h1>${groupName}</h1>
+                <h2>${groupName || 'Misc'} (${group.count()})</h2>
             </div>
-            ${fictionOrNonHtml}
+            <div class="row">
+                ${itemsHtml}
+            </div>
         `;
     })
     .join("\n");

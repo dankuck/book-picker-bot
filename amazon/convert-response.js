@@ -54,13 +54,6 @@ const isFiction = function (categories) {
         );
 };
 
-const adultCategories = ['Adult', 'Sex', 'Erotica'];
-
-const looksLikeAdultContent = function (item, categories) {
-    return Boolean(Number(first(item, 'ItemAttributes.0.IsAdultProduct.0')))
-        || first(item, 'ItemAttributes.0.Format.0') === 'Adult'
-        || collect(categories).intersect(adultCategories).length > 0;
-}
 
 const getDimensions = function (item) {
     const height = first(item, 'ItemAttributes.0.ItemDimensions.0.Height.0');
@@ -110,13 +103,6 @@ module.exports = function amazonConvertResponse(response, search) {
                 ? new Date(first(item, 'ItemAttributes.0.PublicationDate.0'))
                 : null;
             let {categories, full_categories} = buildCategoryLists(item);
-            categories = categories
-                .filter(category => ! ['Books', 'Subjects'].includes(category));
-            full_categories = full_categories.map(full_category => {
-                return full_category
-                    .filter(category => ! ['Books', 'Subjects'].includes(category));
-            });
-            const is_adult_only = looksLikeAdultContent(item);
             return {
                 title: first(item, 'ItemAttributes.0.Title.0'),
                 isbn: first(item, 'ItemAttributes.0.ISBN.0'),
@@ -124,7 +110,7 @@ module.exports = function amazonConvertResponse(response, search) {
                 image,
                 by: all(item, 'ItemAttributes.0.Author')
                     .concat(all(item, 'ItemAttributes.0.Creator.*._')),
-                is_adult_only,
+                is_adult_only: Boolean(Number(first(item, 'ItemAttributes.0.IsAdultProduct.0'))),
                 dimensions,
                 languages,
                 has_english: languages.includes('English'),
