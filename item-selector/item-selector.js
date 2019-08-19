@@ -22,6 +22,9 @@ const collect = require('collect.js');
  | accepts an array of values for the given rule and returns true if and only
  | if those values meet desired criteria.
  |
+ | If a `value` function produces arrays, the `bounds` function will receive
+ | them as a single merged array.
+ |
  | Example:
  |
  |     // This example creates an ItemSelector that will build arrays that
@@ -169,7 +172,7 @@ class ItemSelector {
                     .get(item);
         };
         const selected = [...start_items];
-        let lastCompile = this.compileAllProfiles(selected.map(item => this.buildProfile(item)));
+        let lastCompile = this.compileAllProfiles(selected.map(getProfile));
         let startLength;
         do {
             startLength = selected.length;
