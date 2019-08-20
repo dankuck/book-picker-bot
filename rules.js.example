@@ -1,3 +1,4 @@
+const collect = require('collect.js');
 const {
     maxCount,
     maxDuplication,
@@ -5,11 +6,70 @@ const {
     minCount,
     minPercentage,
 } = require('./item-selector/item-selector.js');
-const collect = require('collect.js');
 
+/**
+ * The rules that will be used in the ItemSelector
+ * @type {Object}
+ */
+const rules = {
+    'There should be a few used copies available': {
+        value: ({offer_counts: {used, collectible, refurbished}}) => {
+            return used + collectible + refurbished >= 3;
+        },
+        bounds: [minPercentage(.9)],
+    },
+    'There should be no more than 2 of the same search term in the same category': {
+        value: item => item.search + ':' + categorize(item),
+        bounds: [maxDuplication(2)],
+    },
+    'Most books should be over 5 years old': {
+        value: ({published_at}) => new Date(published_at).getYear() < new Date().getYear() - 5,
+        bounds: [minPercentage(.9)],
+    },
+    'Most books should be fiction, but there should be a solid chunk of non-fiction': {
+        value: item => item.is_fiction,
+        bounds: [
+            minPercentage(.50),
+            maxPercentage(.80),
+        ],
+    },
+};
+
+/**
+ * If this function returns true, the book will not be considered for inclusion
+ * @param  {object} item
+ * @return {boolean}
+ */
+const reject = (item) => {
+    return /calendar/i.test(item.format)
+        || /map/i.test(item.format)
+        || !item.offer_counts
+        || !item.published_at
+        || !item.has_english
+        || !item.image
+        || item.image.height < 10
+        || item.image.width < 10
+        || !item.pages
+        || item.pages == 1
+        || looksLikeAdultContent(item)
+};
+
+const adultCategories = ['Adult', 'Sex', 'Erotica'];
+
+const looksLikeAdultContent = (item) => {
+    return item.is_adult_only
+        || item.format === 'Adult'
+        || collect(item.categories).intersect(adultCategories).length > 0;
+};
+
+/**
+ * Choose a category for the given item
+ * @param  {object} item
+ * @return {string}
+ */
 const categorize = function categorize(item) {
     const categories = item.categories.join('; ');
-    if (/children/i.test(categories) && !/studies/i.test(categories)) {
+    if (/children/i.test(categories) && !/studies/i.test(categories) && !/adult/i.test(categories)) {
         return 'Children';
     } else if (item.is_fiction) {
         if (/science/i.test(categories)) {
@@ -30,50 +90,8 @@ const categorize = function categorize(item) {
     }
 };
 
-const adultCategories = ['Adult', 'Sex', 'Erotica'];
-
-const looksLikeAdultContent = (item) => {
-    return item.is_adult_only
-        || item.format === 'Adult'
-        || collect(item.categories).intersect(adultCategories).length > 0;
-};
-
 module.exports = {
-    rules: {
-        'There should be a few used copies available': {
-            value: ({offer_counts: {used, collectible, refurbished}}) => {
-                return used + collectible + refurbished >= 3;
-            },
-            bounds: [minPercentage(.9)],
-        },
-        'There should be no more than 2 of the same search term in the same section': {
-            value: item => item.search + ':' + categorize(item),
-            bounds: [maxDuplication(2)],
-        },
-        'Most books should be over 5 years old': {
-            value: ({published_at}) => new Date(published_at).getYear() < new Date().getYear() - 5,
-            bounds: [minPercentage(.9)],
-        },
-        'Most books should be fiction, but there should be a solid chunk of non-fiction': {
-            value: item => item.is_fiction,
-            bounds: [
-                minPercentage(.50),
-                maxPercentage(.80),
-            ],
-        },
-    },
-    reject: (item) => {
-        return /calendar/i.test(item.format)
-            || /map/i.test(item.format)
-            || !item.offer_counts
-            || !item.published_at
-            || !item.has_english
-            || !item.image
-            || item.image.height < 10
-            || item.image.width < 10
-            || !item.pages
-            || item.pages == 1
-            || looksLikeAdultContent(item)
-    },
+    rules,
+    reject,
     categorize,
 };
