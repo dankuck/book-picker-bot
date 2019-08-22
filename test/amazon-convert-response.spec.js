@@ -36,6 +36,16 @@ describe('amazon/convert-response.js', function () {
                 "height": 160,
                 "width": 104
             },
+            "small_image": {
+                "height": 75,
+                "url": "https://images-na.ssl-images-amazon.com/images/I/51-sp1mcBtL._SL75_.jpg",
+                "width": 49,
+            },
+            "large_image": {
+                "height": 500,
+                "url": "https://images-na.ssl-images-amazon.com/images/I/51-sp1mcBtL.jpg",
+                "width": 324,
+            },
             "by": [
                 "Verne Ovid Graham"
             ],

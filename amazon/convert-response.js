@@ -69,6 +69,19 @@ const getDimensions = function (item) {
     return null;
 };
 
+const getImage = function getImage(item, path) {
+    return all(item, path)
+        .filter(Boolean)
+        .map(image => {
+            return {
+                url: first(image, 'URL.0'),
+                height: Number(first(image, 'Height.0._')),
+                width: Number(first(image, 'Width.0._')),
+            };
+        })
+        [0]
+};
+
 module.exports = function amazonConvertResponse(response, search) {
     const error = first(response, 'ItemSearchResponse.Items.0.Request.0.Errors.0.Error.0.Message');
     if (error) {
@@ -79,16 +92,9 @@ module.exports = function amazonConvertResponse(response, search) {
         .map(x => x || [])
         .flatten(1)
         .map((item) => {
-            const image = all(item, 'MediumImage')
-                .filter(Boolean)
-                .map(image => {
-                    return {
-                        url: first(image, 'URL.0'),
-                        height: Number(first(image, 'Height.0._')),
-                        width: Number(first(image, 'Width.0._')),
-                    };
-                })
-                [0];
+            const image = getImage(item, 'MediumImage');
+            const small_image = getImage(item, 'SmallImage');
+            const large_image = getImage(item, 'LargeImage');
             const dimensions = getDimensions(item);
             const languages = all(item, 'ItemAttributes.0.Languages.0.Language.0.Name');
             const offer_counts = first(item, 'OfferSummary.0.TotalNew.0')
@@ -108,6 +114,8 @@ module.exports = function amazonConvertResponse(response, search) {
                 isbn: first(item, 'ItemAttributes.0.ISBN.0'),
                 url: first(item, 'DetailPageURL.0'),
                 image,
+                small_image,
+                large_image,
                 by: all(item, 'ItemAttributes.0.Author')
                     .concat(all(item, 'ItemAttributes.0.Creator.*._')),
                 is_adult_only: Boolean(Number(first(item, 'ItemAttributes.0.IsAdultProduct.0'))),
